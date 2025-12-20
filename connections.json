@@ -4,15 +4,17 @@
         "data": {
             "user": "media",
             "password": "1pP3udN",
-            "ip": "192.168.1.144"
+            "ip": "192.168.1.144",
+            "webip": "192.168.1.144:8080"
         }
     },
     {
-        "name": "bmw", 
+        "name": "emsa", 
         "data": {
             "user": "nagios",
-            "password": "/home/emanuelc/bmwkey.pem",
-            "ip": "192.168.131.8"
+            "password": "1pP3udN",
+            "ip": "10.12.107.95",
+            "webip": "10.12.107.95/nagios"
         }
     }
 ]

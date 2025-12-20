@@ -12,7 +12,8 @@ type connection struct {
 	Data struct {
 		User     string `json:"user"`
 		Password string `json:"password"`
-		IP       string `json:"IP"`
+		IP       string `json:"ip"`
+		WebIP    string `json:"webip"`
 	} `json:"data"`
 }
 
@@ -34,6 +35,7 @@ func generateList(filePath string) (list.Model, error) {
 		items = append(items, Item{
 			name:     conn.Name,
 			ip:       conn.Data.IP,
+			webip:    conn.Data.WebIP,
 			user:     conn.Data.User,
 			password: conn.Data.Password,
 		})

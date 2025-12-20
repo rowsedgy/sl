@@ -1,21 +1,47 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"os/exec"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func main() {
-	user := "media"
-	host := "mediaserver"
-
-	cmd := exec.Command("ssh", user+"@"+host)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	err := spawnSSHSession("media", "1pP3udN", "192.168.1.144")
+	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func spawnSSHSession(user, password, ip string) error {
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(password),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	client, err := ssh.Dial("tcp", ip+":22", config)
+	if err != nil {
+		return fmt.Errorf("error establishing ssh connection: %v", err)
+	}
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return fmt.Errorf("error establishing new session: %v", err)
+	}
+	defer session.Close()
+
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	session.Stdin = os.Stdin
+
+	if err := session.Run("bash"); err != nil {
+		return fmt.Errorf("error running bash inside session: %v", err)
+	}
+	return nil
 }

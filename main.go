@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,8 +14,27 @@ import (
 type Item struct {
 	name     string
 	ip       string
+	webip    string
 	user     string
 	password string
+}
+
+type listKeyMap struct {
+	toggleDetails key.Binding
+	openWeb       key.Binding
+}
+
+func newListKeyMap() *listKeyMap {
+	return &listKeyMap{
+		toggleDetails: key.NewBinding(
+			key.WithKeys("i"),
+			key.WithHelp("i", "toggle details"),
+		),
+		openWeb: key.NewBinding(
+			key.WithKeys("w"),
+			key.WithHelp("w", "open Web link"),
+		),
+	}
 }
 
 // items
@@ -28,12 +48,16 @@ func (i Item) User() string        { return string(i.user) }
 
 type model struct {
 	list       list.Model
+	keys       *listKeyMap
 	showDetail bool
+	startSSH   bool
 }
 
 const filepath = "connections.json"
 
 func initialModel() model {
+	// set up keys
+	var listKeys = newListKeyMap()
 	newList, err := generateList(filepath)
 	if err != nil {
 		log.Fatal(err)
@@ -43,11 +67,17 @@ func initialModel() model {
 	newList.SetFilteringEnabled(true)
 	newList.SetShowPagination(true)
 	newList.SetShowHelp(true)
+	newList.AdditionalFullHelpKeys = func() []key.Binding {
+		return []key.Binding{
+			listKeys.toggleDetails,
+			listKeys.openWeb,
+		}
+	}
 
 	newList.KeyMap.Filter.SetKeys("/")
 	newList.KeyMap.ClearFilter.SetKeys("esc")
 
-	return model{list: newList}
+	return model{list: newList, startSSH: false}
 }
 
 func (m model) Init() tea.Cmd {
@@ -65,17 +95,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "enter":
-			selected := m.list.SelectedItem().(Item)
-			err := spawnSSHSession(
-				selected.user,
-				selected.password,
-				selected.ip,
-			)
+			m.startSSH = true
+			return m, tea.Quit
+		case "i":
+			m.showDetail = !m.showDetail
+		case "w":
+			err := handleWebLink(m)
 			if err != nil {
 				log.Fatal(err)
 			}
-		case "i":
-			m.showDetail = !m.showDetail
 		}
 	}
 
@@ -115,8 +143,15 @@ func main() {
 		tea.WithAltScreen(),
 	)
 
-	if err := p.Start(); err != nil {
-		fmt.Println("error:", err)
+	m, err := p.Run()
+	if err != nil {
+		fmt.Println("Error starting program:", err)
 		os.Exit(1)
 	}
+
+	err = handleSSHSession(m)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
