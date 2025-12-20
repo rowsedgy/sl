@@ -4,13 +4,19 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 )
 
-const testFile = "connections2.json"
+// const testFile = "connections2.json"
 
 func handleArgs(args []string) {
+	if args[0] == "ls" && len(args) < 2 {
+		err := listEntries(filepath)
+		if err != nil {
+			fmt.Println("ERROR -", err)
+		}
+		os.Exit(0)
+	}
 	if args[0] == "--help" || len(args) < 2 {
 		printHelp()
 	}
@@ -28,16 +34,16 @@ func handleArgs(args []string) {
 	switch args[0] {
 	case "add":
 		addCmd.Parse(args[1:])
-		err := addEntry(testFile, *addName, *addIP, *addWebIP, *addUser, *addPassword)
+		err := addEntry(filepath, *addName, *addIP, *addWebIP, *addUser, *addPassword)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
 	case "remove":
 		removeCmd.Parse(args[1:])
-		err := removeEntry(testFile, *removeName)
+		err := removeEntry(filepath, *removeName)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
 	default:
@@ -119,6 +125,26 @@ func removeEntry(file, name string) error {
 	err = os.WriteFile(file, updatedBytes, 0644)
 	if err != nil {
 		return fmt.Errorf("Error writing to file: %v", err)
+	}
+
+	return nil
+}
+
+func listEntries(file string) error {
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("Error opening file: %v", err)
+	}
+
+	var connections []connection
+
+	err = json.Unmarshal(bytes, &connections)
+	if err != nil {
+		return fmt.Errorf("Error unmarshaling json: %v", err)
+	}
+
+	for _, c := range connections {
+		fmt.Printf("- Name: %s\n\t- IP: %s\n\t- WebIp: %s\n", c.Name, c.Data.IP, c.Data.WebIP)
 	}
 
 	return nil
