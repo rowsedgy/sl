@@ -31,7 +31,7 @@ testing/
 connections.json
 connections2.json
 shl
-sl
+sl*
 
 # Editor/IDE
 # .idea/

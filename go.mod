@@ -1,4 +1,4 @@
-module sl
+module github.com/rowsedgy/sl
 
 go 1.25.5
 
