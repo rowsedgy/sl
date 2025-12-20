@@ -1,4 +1,4 @@
-module ssh-list
+module sl
 
 go 1.25.5
 

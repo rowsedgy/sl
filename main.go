@@ -51,12 +51,16 @@ type model struct {
 	startSSH   bool
 }
 
-const filepath = "connections.json"
+const fileName = "sl-connections.json"
 
-func initialModel() model {
+type cfg struct {
+	filepath string
+}
+
+func (c *cfg) initialModel() model {
 	// set up keys
 	var listKeys = newListKeyMap()
-	newList, err := generateList(filepath)
+	newList, err := c.generateList()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,14 +139,23 @@ func (m model) View() string {
 }
 
 func main() {
+
+	fullFilePath, err := checkConfigFile(fileName)
+	if err != nil {
+		fmt.Println("ERROR -", err)
+	}
+	globalCFG := cfg{
+		filepath: fullFilePath,
+	}
+
 	args := os.Args[1:]
 
 	if len(args) != 0 {
-		handleArgs(args)
+		globalCFG.handleArgs(args)
 	}
 
 	p := tea.NewProgram(
-		initialModel(),
+		globalCFG.initialModel(),
 		tea.WithAltScreen(),
 	)
 
@@ -157,4 +170,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+}
+
+func checkConfigFile(file string) (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	filePath := homeDir + "/.config/" + file
+
+	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	return filePath, nil
 }

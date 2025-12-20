@@ -7,18 +7,16 @@ import (
 	"os"
 )
 
-// const testFile = "connections2.json"
-
-func handleArgs(args []string) {
+func (c *cfg) handleArgs(args []string) {
 	if args[0] == "ls" && len(args) < 2 {
-		err := listEntries(filepath)
+		err := c.listEntries()
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
 	}
 	if args[0] == "--help" || len(args) < 2 {
-		printHelp()
+		c.printHelp()
 	}
 
 	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
@@ -34,45 +32,42 @@ func handleArgs(args []string) {
 	switch args[0] {
 	case "add":
 		addCmd.Parse(args[1:])
-		err := addEntry(filepath, *addName, *addIP, *addWebIP, *addUser, *addPassword)
+		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
 	case "remove":
 		removeCmd.Parse(args[1:])
-		err := removeEntry(filepath, *removeName)
+		err := c.removeEntry(*removeName)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
 	default:
-		printHelp()
+		c.printHelp()
 	}
 }
 
-func printHelp() {
-	fmt.Println("printing help")
-	os.Exit(0)
-}
-
-func addEntry(file, name, ip, webip, user, password string) error {
-	bytes, err := os.ReadFile(file)
+func (c *cfg) addEntry(name, ip, webip, user, password string) error {
+	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return err
 	}
 
 	var connections []connection
 
-	err = json.Unmarshal(bytes, &connections)
-	if err != nil {
-		return fmt.Errorf("Error unmarshaling json: %v", err)
-	}
+	if len(bytes) < 3 {
+		err = json.Unmarshal(bytes, &connections)
+		if err != nil {
+			return fmt.Errorf("Error unmarshaling json in addentry: %v", err)
+		}
 
-	// check duplicates
-	for _, c := range connections {
-		if c.Name == name {
-			return fmt.Errorf("Entry %s already exists", name)
+		// check duplicates
+		for _, c := range connections {
+			if c.Name == name {
+				return fmt.Errorf("Entry %s already exists", name)
+			}
 		}
 	}
 
@@ -90,7 +85,7 @@ func addEntry(file, name, ip, webip, user, password string) error {
 		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
 
-	err = os.WriteFile(file, updatedBytes, 0644)
+	err = os.WriteFile(c.filepath, updatedBytes, 0644)
 	if err != nil {
 		return fmt.Errorf("Error writing to file: %v", err)
 	}
@@ -98,8 +93,8 @@ func addEntry(file, name, ip, webip, user, password string) error {
 	return nil
 }
 
-func removeEntry(file, name string) error {
-	bytes, err := os.ReadFile(file)
+func (c *cfg) removeEntry(name string) error {
+	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return fmt.Errorf("Error opening file: %v", err)
 	}
@@ -122,7 +117,7 @@ func removeEntry(file, name string) error {
 		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
 
-	err = os.WriteFile(file, updatedBytes, 0644)
+	err = os.WriteFile(c.filepath, updatedBytes, 0644)
 	if err != nil {
 		return fmt.Errorf("Error writing to file: %v", err)
 	}
@@ -130,13 +125,17 @@ func removeEntry(file, name string) error {
 	return nil
 }
 
-func listEntries(file string) error {
-	bytes, err := os.ReadFile(file)
+func (c *cfg) listEntries() error {
+	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return fmt.Errorf("Error opening file: %v", err)
 	}
 
 	var connections []connection
+
+	if len(bytes) < 3 {
+		return fmt.Errorf("No entries in %s", c.filepath)
+	}
 
 	err = json.Unmarshal(bytes, &connections)
 	if err != nil {
@@ -144,8 +143,20 @@ func listEntries(file string) error {
 	}
 
 	for _, c := range connections {
-		fmt.Printf("- Name: %s\n\t- IP: %s\n\t- WebIp: %s\n", c.Name, c.Data.IP, c.Data.WebIP)
+		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n", c.Name, c.Data.IP, c.Data.WebIP)
 	}
 
 	return nil
+}
+
+func (c *cfg) printHelp() {
+	cmd := os.Args[0]
+	fmt.Println("Usage:")
+	fmt.Printf("* %s\n\tLaunches list in interactive mode\n", cmd)
+	fmt.Printf("* %s ls\n\tLists all available host names\n", cmd)
+	fmt.Printf("* %s add --name=<hostname> --ip=<ip address> --webip=<web interface addr> --user=<ssh username> --password=<ssh password>\n\t Adds an entry to the list for the provided host\n", cmd)
+	fmt.Printf("* %s remove --name<hostname>\n\tRemoves provided host from entries\n", cmd)
+	fmt.Printf("\n\nConnection file is located at %s\n", c.filepath)
+
+	os.Exit(0)
 }

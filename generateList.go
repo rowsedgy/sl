@@ -17,13 +17,17 @@ type connection struct {
 	} `json:"data"`
 }
 
-func generateList(filePath string) (list.Model, error) {
-	bytes, err := os.ReadFile(filePath)
+func (c *cfg) generateList() (list.Model, error) {
+	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return list.Model{}, err
 	}
 
 	var connections []connection
+
+	if len(bytes) == 0 {
+		return list.New(nil, list.NewDefaultDelegate(), 0, 0), nil
+	}
 
 	if err := json.Unmarshal(bytes, &connections); err != nil {
 		return list.Model{}, err
