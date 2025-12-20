@@ -1,0 +1,18 @@
+[
+    {
+        "name": "emsa",
+        "data": {
+            "user": "nagios",
+            "key": "/home/emanuelc/emsakey.pem",
+            "ip": "10.12.107.95"
+        }
+    },
+    {
+        "name": "bmw", 
+        "data": {
+            "user": "nagios",
+            "key": "/home/emanuelc/bmwkey.pem",
+            "ip": "192.168.131.8"
+        }
+    }
+]
