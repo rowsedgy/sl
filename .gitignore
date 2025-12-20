@@ -27,10 +27,10 @@ go.work.sum
 # env file
 .env
 
-testing/
-connections.json
-connections2.json
-shl
+*testing/
+*connections.json
+*connections2.json
+*shl
 
 # Editor/IDE
 # .idea/
