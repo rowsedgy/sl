@@ -11,10 +11,10 @@ import (
 )
 
 type Item struct {
-	name string
-	ip   string
-	user string
-	key  string
+	name     string
+	ip       string
+	user     string
+	password string
 }
 
 // items
@@ -23,7 +23,8 @@ func (i Item) Title() string       { return string(i.name) }
 func (i Item) Description() string { return string(i.ip) }
 func (i Item) FilterValue() string { return string(i.name) }
 func (i Item) User() string        { return string(i.user) }
-func (i Item) Key() string         { return string(i.key) }
+
+// func (i Item) Key() string         { return string(i.key) }
 
 type model struct {
 	list       list.Model
@@ -65,7 +66,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "enter":
 			selected := m.list.SelectedItem().(Item)
-			fmt.Println("Selected:", selected)
+			err := spawnSSHSession(
+				selected.user,
+				selected.password,
+				selected.ip,
+			)
+			if err != nil {
+				log.Fatal(err)
+			}
 		case "i":
 			m.showDetail = !m.showDetail
 		}
@@ -92,7 +100,7 @@ func (m model) View() string {
 				selected.name,
 				selected.ip,
 				selected.user,
-				selected.key,
+				selected.password,
 			))
 		return box
 	}

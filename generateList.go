@@ -10,9 +10,9 @@ import (
 type connection struct {
 	Name string `json:"name"`
 	Data struct {
-		User string `json:"user"`
-		Key  string `json:"key"`
-		IP   string `json:"IP"`
+		User     string `json:"user"`
+		Password string `json:"password"`
+		IP       string `json:"IP"`
 	} `json:"data"`
 }
 
@@ -32,10 +32,10 @@ func generateList(filePath string) (list.Model, error) {
 
 	for _, conn := range connections {
 		items = append(items, Item{
-			name: conn.Name,
-			ip:   conn.Data.IP,
-			user: conn.Data.User,
-			key:  conn.Data.Key,
+			name:     conn.Name,
+			ip:       conn.Data.IP,
+			user:     conn.Data.User,
+			password: conn.Data.Password,
 		})
 	}
 

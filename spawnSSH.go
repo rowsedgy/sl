@@ -35,4 +35,5 @@ func spawnSSHSession(user, password, ip string) error {
 	if err := session.Run("bash"); err != nil {
 		return fmt.Errorf("error running bash inside session: %v", err)
 	}
+	return nil
 }
