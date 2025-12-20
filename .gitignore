@@ -30,6 +30,7 @@ go.work.sum
 testing/
 connections.json
 connections2.json
+shl
 
 # Editor/IDE
 # .idea/
