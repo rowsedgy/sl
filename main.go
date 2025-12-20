@@ -40,11 +40,9 @@ func newListKeyMap() *listKeyMap {
 // items
 
 func (i Item) Title() string       { return string(i.name) }
-func (i Item) Description() string { return string(i.ip) }
+func (i Item) Description() string { return string("IP: " + i.ip + " WEB: " + i.webip) }
 func (i Item) FilterValue() string { return string(i.name) }
 func (i Item) User() string        { return string(i.user) }
-
-// func (i Item) Key() string         { return string(i.key) }
 
 type model struct {
 	list       list.Model
@@ -124,11 +122,11 @@ func (m model) View() string {
 			Padding(1, 2).
 			Margin(1, 2).
 			Width(50).
-			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nKey path: %s\n\nPress i to go back to list.",
+			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\n\nPress \"i\" to go back to list.",
 				selected.name,
 				selected.ip,
 				selected.user,
-				selected.password,
+				selected.webip,
 			))
 		return box
 	}
@@ -137,7 +135,12 @@ func (m model) View() string {
 }
 
 func main() {
-	generateList("connections.json")
+	args := os.Args[1:]
+
+	if len(args) != 0 {
+		handleArgs(args)
+	}
+
 	p := tea.NewProgram(
 		initialModel(),
 		tea.WithAltScreen(),
