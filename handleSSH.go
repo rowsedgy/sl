@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/exec"
 
@@ -28,6 +29,7 @@ func handleSSHSession(m tea.Model) error {
 
 	if model.list.SelectedItem() != nil && model.startSSH {
 		selected := model.list.SelectedItem().(Item)
+		log.Printf("Connecting to host %s: %s\n", selected.name, selected.ip)
 
 		err := spawnSSHSession(selected.user, selected.password, selected.ip)
 		if err != nil {
