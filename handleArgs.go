@@ -57,7 +57,7 @@ func (c *cfg) addEntry(name, ip, webip, user, password string) error {
 
 	var connections []connection
 
-	if len(bytes) < 3 {
+	if len(bytes) > 3 {
 		err = json.Unmarshal(bytes, &connections)
 		if err != nil {
 			return fmt.Errorf("Error unmarshaling json in addentry: %v", err)
