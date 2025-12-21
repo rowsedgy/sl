@@ -26,6 +26,7 @@ type listKeyMap struct {
 	openWeb       key.Binding
 }
 
+// additional key info on helpbar
 func newListKeyMap() *listKeyMap {
 	return &listKeyMap{
 		toggleDetails: key.NewBinding(
@@ -38,8 +39,6 @@ func newListKeyMap() *listKeyMap {
 		),
 	}
 }
-
-// items
 
 func (i Item) Title() string       { return string(i.name) }
 func (i Item) Description() string { return string("IP: " + i.ip + " WEB: " + i.webip) }
@@ -66,7 +65,7 @@ func (c *cfg) initialModel() model {
 	if err != nil {
 		log.Fatal(err)
 	}
-	newList.Title = "Lista de Nagios"
+	newList.Title = "SL"
 	newList.SetShowStatusBar(true)
 	newList.SetFilteringEnabled(true)
 	newList.SetShowPagination(true)
@@ -77,9 +76,6 @@ func (c *cfg) initialModel() model {
 			listKeys.openWeb,
 		}
 	}
-
-	// newList.KeyMap.Filter.SetKeys("/")
-	// newList.KeyMap.ClearFilter.SetKeys("esc")
 
 	return model{list: newList, startSSH: false}
 }
@@ -95,7 +91,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetSize(msg.Width, msg.Height)
 
 	case tea.KeyMsg:
-		// ignore if filtering
+		// ignore keybinds if filtering
 		if m.list.FilterState() == list.Filtering {
 			break
 		}
