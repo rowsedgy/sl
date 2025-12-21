@@ -8,8 +8,14 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func spawnSSHSession(user, password, ip string) error {
-	cmd := exec.Command("sshpass", "-p", password, "ssh", "-o", "StrictHostKeyChecking=no", "-o", "PreferredAuthentications=password", user+"@"+ip)
+func spawnSSHSession(selectedItem Item) error {
+	var cmd *exec.Cmd
+
+	if selectedItem.pubauth {
+		cmd = exec.Command("ssh", "-i", selectedItem.key, "-o", "StrictHostKeyChecking=no", selectedItem.user+"@"+selectedItem.ip)
+	} else {
+		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-o", "StrictHostKeyChecking=no", "-o", "PreferredAuthentications=password", selectedItem.user+"@"+selectedItem.ip)
+	}
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -31,7 +37,7 @@ func handleSSHSession(m tea.Model) error {
 		selected := model.list.SelectedItem().(Item)
 		log.Printf("Connecting to host %s: %s\n", selected.name, selected.ip)
 
-		err := spawnSSHSession(selected.user, selected.password, selected.ip)
+		err := spawnSSHSession(selected)
 		if err != nil {
 			return err
 		}

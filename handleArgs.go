@@ -25,6 +25,8 @@ func (c *cfg) handleArgs(args []string) {
 	addWebIP := addCmd.String("webip", "None", "Web Interface IP")
 	addUser := addCmd.String("user", "None", "SSH User")
 	addPassword := addCmd.String("password", "None", "SSH Password")
+	addPubauth := addCmd.Bool("pubauth", false, "PubKey authentication")
+	addPubKey := addCmd.String("key", "None", "Key file path")
 
 	removeCmd := flag.NewFlagSet("remove", flag.ExitOnError)
 	removeName := removeCmd.String("name", "Nil", "HostName to remove")
@@ -32,7 +34,7 @@ func (c *cfg) handleArgs(args []string) {
 	switch args[0] {
 	case "add":
 		addCmd.Parse(args[1:])
-		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword)
+		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword, *addPubKey, *addPubauth)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
@@ -49,7 +51,7 @@ func (c *cfg) handleArgs(args []string) {
 	}
 }
 
-func (c *cfg) addEntry(name, ip, webip, user, password string) error {
+func (c *cfg) addEntry(name, ip, webip, user, password, key string, pubauth bool) error {
 	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return err
@@ -77,6 +79,8 @@ func (c *cfg) addEntry(name, ip, webip, user, password string) error {
 	newEntry.Data.WebIP = webip
 	newEntry.Data.User = user
 	newEntry.Data.Password = password
+	newEntry.Data.Pubauth = pubauth
+	newEntry.Data.Key = key
 
 	connections = append(connections, newEntry)
 

@@ -15,8 +15,10 @@ type Item struct {
 	name     string
 	ip       string
 	webip    string
+	pubauth  bool
 	user     string
 	password string
+	key      string
 }
 
 type listKeyMap struct {
@@ -59,7 +61,7 @@ type cfg struct {
 
 func (c *cfg) initialModel() model {
 	// set up keys
-	var listKeys = newListKeyMap()
+	listKeys := newListKeyMap()
 	newList, err := c.generateList()
 	if err != nil {
 		log.Fatal(err)
@@ -144,7 +146,6 @@ func (m model) View() string {
 }
 
 func main() {
-
 	fullFilePath, err := checkConfigFile(fileName)
 	if err != nil {
 		fmt.Println("ERROR -", err)
@@ -174,7 +175,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func checkConfigFile(file string) (string, error) {
@@ -185,7 +185,7 @@ func checkConfigFile(file string) (string, error) {
 
 	filePath := homeDir + "/.config/" + file
 
-	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
+	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0o644)
 	if err != nil {
 		return "", err
 	}
