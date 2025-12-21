@@ -28,7 +28,98 @@ Este fichero se puede generar a mano previamente o se generara solo al añadir a
 **\*\*** **IMPORTANTE**  **\*\***  
 **TODA LA INFORMACION AÑADIDA AL FICHERO SL-CONNECTIONS ESTA GUARDADA EN TEXTO PLANO. ESTO INCLUYE CONTRASEÑAS**
 
+El formato del archivo de conexiones es el siguiente (es una lista de objetos json):
 
+```json
+[
+	{
+		"name": "Nombre de Host",
+		"data": {
+			"user": "Usuario SSH",
+			"password": "Contraseña SSH",
+			"pubauth": <true/false>,  // Define si host usa autenticacion por clave publica.
+			"key": "Ruta de fichero clave publica",
+			"ip": "IP de conexion por SSH",
+			"webip": "URL de endpoint web" //  ej: "http://1.2.3.4/web"
+		}
+	}
+]
+```
+### Modo interactivo
+
+```
+sl
+```
+Esto lanzara el modo interactivo. Se mostrara una lista interactiva de todos los elementos que esten dentro del fichero de conexiones.  
+
+Keybinds basicos:
+- **^ / k** - Arriba
+- **v / j** - Abajo
+- **q** - Salir
+- **/** - Filtro
+- **Enter** - Abrir conexion ssh al elemento seleccionado 
+- **i** - Abrir/cerrar panel de detalles del elemento seleccionado
+- **w** - Abrir enlace web del elemento seleccionado
+
+
+
+### Modo Linea de Comandos
+
+#### Ayuda
+```
+sl help
+```
+
+#### Listar todos las entradas del fichero de conexiones.  
+```
+sl ls
+```
+#### Añadir entrada
+Campos disponibles (cualquier campo no definido recibira el valor por defecto **None**)
+- name 
+- ip
+- webip
+- user
+- user
+- password
+- pubauth
+- key
+
+```
+sl add --name=<nombre> --ip=<ip> --webip=<webip> --user=<usuario> --password=<contraseña> --pubauth=<true/false> --key=<ruta clave>
+```
+
+#### Borrar entrada
+Las entradas se borran usando el campo **name**
+
+```
+sl remove --name=<nombre>
+```
+
+#### Editar entrada
+
+Para editar una entrada habra que hacerlo desde el fichero de conexiones manualmente.
+
+
+
+### Script para añadir hosts en bulk
+
+Copiar los hosts que se quieran añadir a un fichero en formato:  
+\<Nombre1\> \<IP\>  
+\<Nombre2\> \<IP\>  
+\<Nombre3\> \<IP\>  
+...
+
+```bash
+#!/bin/bash
+while read -r HOSTNAME IP _; do
+    sl add --name="$HOSTNAME" --ip="$IP" --user=<usuario> --password=<contraseña>
+done < $1
+```
+
+```bash
+./script-bulk.sh lista-hosts.txt
+```
 
 
 ### TODO
