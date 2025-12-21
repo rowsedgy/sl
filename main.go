@@ -106,10 +106,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "i":
 			m.showDetail = !m.showDetail
 		case "w":
-			err := handleWebLink(m)
-			if err != nil {
-				log.Fatal(err)
-			}
+			go func() {
+				if err := handleWebLink(m); err != nil {
+					log.Println(err)
+				}
+			}()
 		}
 	}
 
