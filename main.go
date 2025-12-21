@@ -76,8 +76,8 @@ func (c *cfg) initialModel() model {
 		}
 	}
 
-	newList.KeyMap.Filter.SetKeys("/")
-	newList.KeyMap.ClearFilter.SetKeys("esc")
+	// newList.KeyMap.Filter.SetKeys("/")
+	// newList.KeyMap.ClearFilter.SetKeys("esc")
 
 	return model{list: newList, startSSH: false}
 }
@@ -93,6 +93,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetSize(msg.Width, msg.Height)
 
 	case tea.KeyMsg:
+		// ignore if filtering
+		if m.list.FilterState() == list.Filtering {
+			break
+		}
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
