@@ -89,7 +89,7 @@ func (c *cfg) addEntry(name, ip, webip, user, password, key string, pubauth bool
 		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
 
-	err = os.WriteFile(c.filepath, updatedBytes, 0644)
+	err = os.WriteFile(c.filepath, updatedBytes, 0o644)
 	if err != nil {
 		return fmt.Errorf("Error writing to file: %v", err)
 	}
@@ -121,7 +121,7 @@ func (c *cfg) removeEntry(name string) error {
 		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
 
-	err = os.WriteFile(c.filepath, updatedBytes, 0644)
+	err = os.WriteFile(c.filepath, updatedBytes, 0o644)
 	if err != nil {
 		return fmt.Errorf("Error writing to file: %v", err)
 	}
@@ -147,7 +147,7 @@ func (c *cfg) listEntries() error {
 	}
 
 	for _, c := range connections {
-		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n", c.Name, c.Data.IP, c.Data.WebIP)
+		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n", c.Name, c.Data.IP, c.Data.WebIP, c.Data.Pubauth, c.Data.Key)
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func (c *cfg) printHelp() {
 	fmt.Println("Usage:")
 	fmt.Printf("* %s\n\tLaunches list in interactive mode\n", cmd)
 	fmt.Printf("* %s ls\n\tLists all available host names\n", cmd)
-	fmt.Printf("* %s add --name=<hostname> --ip=<ip address> --webip=<web interface addr> --user=<ssh username> --password=<ssh password>\n\t Adds an entry to the list for the provided host\n", cmd)
+	fmt.Printf("* %s add --name=<hostname> --ip=<ip address> --webip=<web interface addr> --user=<ssh username> --pubkey=<true/false> --key=<pubkey path> --password=<ssh password>\n\t Adds an entry to the list for the provided host\n", cmd)
 	fmt.Printf("* %s remove --name<hostname>\n\tRemoves provided host from entries\n", cmd)
 	fmt.Printf("\n\nConnection file is located at %s\n", c.filepath)
 

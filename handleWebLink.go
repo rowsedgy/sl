@@ -11,6 +11,9 @@ import (
 
 func handleWebLink(m model) error {
 	url := m.list.SelectedItem().(Item).webip
+	if len(url) == 0 || url == "None" {
+		return nil
+	}
 
 	var cmd string
 	var args []string

@@ -133,11 +133,13 @@ func (m model) View() string {
 			Padding(1, 2).
 			Margin(1, 2).
 			Width(50).
-			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\n\nPress \"i\" to go back to list.",
+			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\nPubKey: %s\nKeyPath: %s\n\nPress \"i\" to go back to list.",
 				selected.name,
 				selected.ip,
 				selected.user,
 				selected.webip,
+				fmt.Sprintf("%v", selected.pubauth),
+				selected.key,
 			))
 		return box
 	}
