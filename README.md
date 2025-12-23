@@ -49,6 +49,7 @@ El formato del archivo de conexiones es el siguiente:
 			"webip": "URL de endpoint web", //  ej: "http://1.2.3.4/web"
 			"tunnel": <true/false>, // Define si el host necesita conectividad por tunel
 			"tunnelhost": "Nombre del tunel usado para conexion" // El nombre debe coincidir con el de la entrada de tunnelhosts
+			"legacy": <true/false> // Define si tunel usa algoritmos antiguos ssh-rsa
 		}
 	}
 }
@@ -100,9 +101,10 @@ Campos disponibles (cualquier campo no definido recibira el valor por defecto **
 - key
 - tunnel
 - tunnelhost
+- legcy
 
 ```
-sl add --name=<nombre> --ip=<ip> --webip=<webip> --user=<usuario> --password=<contraseña> --pubauth=<true/false> --key=<ruta clave> --tunnel<true/false> --tunnelhost=<nombre tunel>
+sl add --name=<nombre> --ip=<ip> --webip=<webip> --user=<usuario> --password=<contraseña> --pubauth=<true/false> --key=<ruta clave> --tunnel<true/false> --tunnelhost=<nombre tunel> --legacy=<true/false>
 ```
 
 #### Añadir tunel

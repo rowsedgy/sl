@@ -23,7 +23,9 @@ func (c *cfg) spawnSSHSession(selectedItem Item) error {
 	}
 	if selectedItem.tunnel {
 		resultCh := make(chan tunnelResult)
+
 		go func() {
+
 			port, err := c.startSSHTunnel(selectedItem)
 			resultCh <- tunnelResult{port: port, err: err}
 		}()
@@ -33,8 +35,7 @@ func (c *cfg) spawnSSHSession(selectedItem Item) error {
 			return result.err
 		}
 
-		// cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "HostKeyAlgorithms=+ssh-rsa", "-o", "StrictHostKeyChecking=no")
-		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "StrictHostKeyChecking=no")
+		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "HostKeyAlgorithms=+ssh-rsa", "-o", "StrictHostKeyChecking=no")
 
 	} else {
 		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-o", "StrictHostKeyChecking=no", "-o", "PreferredAuthentications=password", selectedItem.user+"@"+selectedItem.ip)
@@ -55,7 +56,7 @@ func (c *cfg) startSSHTunnel(selectedItem Item) (int, error) {
 	jumpHost := fmt.Sprintf("%s@%s:22", selectedItem.user, tunnIP)
 	destHost := fmt.Sprintf("%s:22", selectedItem.ip)
 
-	tunnel := NewSSHTunnel(jumpHost, selectedItem.password, destHost)
+	tunnel := NewSSHTunnel(jumpHost, selectedItem.legacy, selectedItem.password, destHost)
 
 	endpointAddr := "127.0.0.1"
 	tunnel.Local = NewEndpoint(endpointAddr)

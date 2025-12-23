@@ -115,7 +115,7 @@ func PrivateKeyFile(path string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(key), nil
 }
 
-func NewSSHTunnel(tunnel string, password string, destination string) *SSHTunnel {
+func NewLegacySSHTunnel(tunnel string, password string, destination string) *SSHTunnel {
 	local := NewEndpoint("localhost:0")
 	server := NewEndpoint(tunnel)
 
@@ -140,17 +140,46 @@ func NewSSHTunnel(tunnel string, password string, destination string) *SSHTunnel
 					},
 				),
 			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // modern replacement
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 			Timeout:         10 * time.Second,
-			// HostKeyAlgorithms: []string{
-			// 	ssh.KeyAlgoED25519,
-			// 	ssh.KeyAlgoECDSA256,
-			// 	ssh.KeyAlgoECDSA384,
-			// 	ssh.KeyAlgoECDSA521,
-			// 	ssh.KeyAlgoRSASHA256,
-			// 	ssh.KeyAlgoRSASHA512,
-			// 	ssh.KeyAlgoRSA,
-			// },
 		},
 	}
+}
+
+func NewSSHTunnel(tunnel string, legacy bool, password, destination string) *SSHTunnel {
+	// if port == 0 a random port will be chosen
+	localEndpoint := NewEndpoint("localhost:0")
+	server := NewEndpoint(tunnel)
+	if server.Port == 0 {
+		server.Port = 22
+	}
+	authType := []ssh.AuthMethod{ssh.Password(password)}
+
+	if legacy {
+		authType = []ssh.AuthMethod{
+			ssh.KeyboardInteractive(
+				func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+					answers := make([]string, len(questions))
+					for i := range answers {
+						answers[i] = password
+					}
+					return answers, nil
+				},
+			),
+		}
+	}
+	sshTunnel := &SSHTunnel{
+		Config: &ssh.ClientConfig{
+			User: server.User,
+			Auth: authType,
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				// Always accept key.
+				return nil
+			},
+		},
+		Local:  localEndpoint,
+		Server: server,
+		Remote: NewEndpoint(destination),
+	}
+	return sshTunnel
 }

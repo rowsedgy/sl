@@ -35,6 +35,7 @@ func (c *cfg) handleArgs(args []string) {
 	addPubKey := addHostCmd.String("key", "None", "Key file path")
 	addTunnel := addHostCmd.Bool("tunnel", false, "Connect through tunnel")
 	addTunnelHost := addHostCmd.String("tunnelhost", "None", "Tunnel Host")
+	addTunnelLegacy := addHostCmd.Bool("legacy", false, "Legacy hostKeyAlgorithms")
 
 	addTunnelCmd := flag.NewFlagSet("addtun", flag.ExitOnError)
 	addTunnelName := addTunnelCmd.String("name", "None", "Tunnel hostname to add")
@@ -51,11 +52,12 @@ func (c *cfg) handleArgs(args []string) {
 	switch args[0] {
 	case "add":
 		addHostCmd.Parse(args[1:])
-		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword, *addPubKey, *addTunnelHost, *addPubauth, *addTunnel)
+		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword, *addPubKey, *addTunnelHost, *addPubauth, *addTunnel, *addTunnelLegacy)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
+
 	case "addtun":
 		addTunnelCmd.Parse(args[1:])
 		err := c.addTunnel(*addTunnelName, *addTunnelUser, *addTunnelPassword, *addTunnelIP)
@@ -63,6 +65,7 @@ func (c *cfg) handleArgs(args []string) {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
+
 	case "remove":
 		removeHostCmd.Parse(args[1:])
 		err := c.removeEntry(*removeName)
@@ -70,6 +73,7 @@ func (c *cfg) handleArgs(args []string) {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
+
 	case "removetun":
 		removeTunnelCmd.Parse(args[1:])
 		err := c.removeTunnel(*removeTunnelName)
@@ -77,12 +81,13 @@ func (c *cfg) handleArgs(args []string) {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
+
 	default:
 		c.printHelp()
 	}
 }
 
-func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, pubauth, tunnel bool) error {
+func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, pubauth, tunnel, legacy bool) error {
 	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return err
@@ -111,6 +116,7 @@ func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, 
 	newEntry.Key = key
 	newEntry.TunnelHost = tunnelhost
 	newEntry.Tunnel = tunnel
+	newEntry.Legacy = legacy
 
 	conns.Hosts[name] = newEntry
 
@@ -142,6 +148,7 @@ func (c *cfg) addTunnel(name, user, password, ip string) error {
 		}
 	}
 
+	// check duplicates
 	if _, ok := conns.TunnelHosts[name]; ok {
 		return fmt.Errorf("Tunnel entry %s already exists", name)
 	}
@@ -242,13 +249,9 @@ func (c *cfg) listEntries() error {
 		return fmt.Errorf("Error unmarshaling json: %v", err)
 	}
 
-	// fmt.Println(c.connections.Hosts)
 	for name, data := range conns.Hosts {
-		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n - Tunnel: %v\n - TunnelHost: %s\n", name, data.IP, data.WebIP, data.Pubauth, data.Key, data.Tunnel, data.TunnelHost)
+		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n - Tunnel: %v\n - TunnelHost: %s\n - Legacy: %v\n", name, data.IP, data.WebIP, data.Pubauth, data.Key, data.Tunnel, data.TunnelHost, data.Legacy)
 	}
-	// for _, c := range connections {
-	// 	fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n", c.Name, c.Data.IP, c.Data.WebIP, c.Data.Pubauth, c.Data.Key)
-	// }
 
 	return nil
 }
@@ -281,8 +284,11 @@ func (c *cfg) printHelp() {
 	fmt.Println("Usage:")
 	fmt.Printf("* %s\n\tLaunches list in interactive mode\n", cmd)
 	fmt.Printf("* %s ls\n\tLists all available host names\n", cmd)
-	fmt.Printf("* %s add --name=<hostname> --ip=<ip address> --webip=<web interface addr> --user=<ssh username> --pubkey=<true/false> --key=<pubkey path> --password=<ssh password>\n\t Adds an entry to the list for the provided host\n", cmd)
+	fmt.Printf("* %s lstun\n\tLists all available tunnels\n", cmd)
+	fmt.Printf("* %s add --name=<hostname> --ip=<ip address> --webip=<web interface addr> --user=<ssh username> --pubkey=<true/false> --key=<pubkey path> --password=<ssh password> --tunnel=<true/false> --tunnelhost=<tunnel host name> --legacy=<true/false>\n\t Adds an entry to the list for the provided host\n", cmd)
+	fmt.Printf("* %s addtun --name=<tunnel-name> --ip=<tunnel ip> --user=<tunnel ssh user> --password=<tunnel ssh password>\n\t Adds a tunnel to the list", cmd)
 	fmt.Printf("* %s remove --name<hostname>\n\tRemoves provided host from entries\n", cmd)
+	fmt.Printf("* %s removetun --name<tunnel-name>\n\tRemoves provided tunnel from entries\n", cmd)
 	fmt.Printf("\n\nConnection file is located at %s\n", c.filepath)
 
 	os.Exit(0)

@@ -7,20 +7,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 )
 
-// type connection struct {
-// 	Name string `json:"name"`
-// 	Data struct {
-// 		User       string `json:"user"`
-// 		Password   string `json:"password"`
-// 		Pubauth    bool   `json:"pubauth"`
-// 		Key        string `json:"key"`
-// 		IP         string `json:"ip"`
-// 		WebIP      string `json:"webip"`
-// 		Tunnel     bool   `json:"tunnel"`
-// 		TunnelHost string `json:"tunnelhost"`
-// 	} `json:"data"`
-// }
-
 type connections struct {
 	TunnelHosts map[string]TunnelHost `json:"tunnelhosts"`
 	Hosts       map[string]Host       `json:"hosts"`
@@ -41,6 +27,7 @@ type Host struct {
 	WebIP      string `json:"webip"`
 	Tunnel     bool   `json:"tunnel"`
 	TunnelHost string `json:"tunnelhost"`
+	Legacy     bool   `json:"legacy"`
 }
 
 func (c *cfg) generateList() (list.Model, error) {
@@ -74,6 +61,7 @@ func (c *cfg) generateList() (list.Model, error) {
 			key:        data.Key,
 			tunnel:     data.Tunnel,
 			tunnelHost: data.TunnelHost,
+			legacy:     data.Legacy,
 		})
 	}
 

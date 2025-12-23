@@ -21,6 +21,7 @@ type Item struct {
 	key        string
 	tunnel     bool
 	tunnelHost string
+	legacy     bool
 }
 
 type listKeyMap struct {
@@ -132,7 +133,7 @@ func (m model) View() string {
 			Padding(1, 2).
 			Margin(1, 2).
 			Width(50).
-			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\nPubKey: %s\nKeyPath: %s\nTunnel: %s\nTunnelHost: %s\nPress \"i\" to go back to list.",
+			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\nPubKey: %s\nKeyPath: %s\nTunnel: %s\nTunnelHost: %s\nLegacy: %s\n\nPress \"i\" to go back to list.",
 				selected.name,
 				selected.ip,
 				selected.user,
@@ -141,6 +142,7 @@ func (m model) View() string {
 				selected.key,
 				fmt.Sprintf("%v", selected.tunnel),
 				selected.tunnelHost,
+				fmt.Sprintf("%v", selected.legacy),
 			))
 		return box
 	}
@@ -149,8 +151,6 @@ func (m model) View() string {
 }
 
 func main() {
-	// _, _ = genList()
-	// os.Exit(0)
 	fullFilePath, err := checkConfigFile(fileName)
 	if err != nil {
 		fmt.Println("ERROR -", err)
