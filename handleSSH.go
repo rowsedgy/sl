@@ -22,30 +22,19 @@ func (c *cfg) spawnSSHSession(selectedItem Item) error {
 		cmd = exec.Command("ssh", "-i", selectedItem.key, "-o", "StrictHostKeyChecking=no", selectedItem.user+"@"+selectedItem.ip)
 	}
 	if selectedItem.tunnel {
-		// freePort, err := getFreePort()
-		// if err != nil {
-		// 	return err
-		// }
 		resultCh := make(chan tunnelResult)
-		// ready := make(chan struct{})
-
-		// start tunnel in background
 		go func() {
-			// close(ready)
-			// if err := startSSHTunnel(selectedItem); err != nil {
-			// 	log.Fatal(err)
-			// }
 			port, err := c.startSSHTunnel(selectedItem)
 			resultCh <- tunnelResult{port: port, err: err}
 		}()
 
-		// <-ready
 		result := <-resultCh
 		if result.err != nil {
 			return result.err
 		}
 
-		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "HostKeyAlgorithms=+ssh-rsa", "-o", "StrictHostKeyChecking=no")
+		// cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "HostKeyAlgorithms=+ssh-rsa", "-o", "StrictHostKeyChecking=no")
+		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "StrictHostKeyChecking=no")
 
 	} else {
 		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-o", "StrictHostKeyChecking=no", "-o", "PreferredAuthentications=password", selectedItem.user+"@"+selectedItem.ip)
@@ -61,18 +50,6 @@ func (c *cfg) spawnSSHSession(selectedItem Item) error {
 	return nil
 }
 
-//	func startSSHTunnel(selectedItem Item) (int, error) {
-//		jumpHost := fmt.Sprintf("%s@%s:22", selectedItem.user, selectedItem.tunnelHost)
-//		destHost := fmt.Sprintf("%s:22", selectedItem.ip)
-//		tunnel := NewSSHTunnel(jumpHost, selectedItem.password, destHost)
-//		// port := tunnel.Local.Port
-//		endpointAddr := fmt.Sprintf("127.0.0.1")
-//		tunnel.Local = NewEndpoint(endpointAddr)
-//		tunnel.Log = log.Default()
-//		port := tunnel.Local.Port
-//		fmt.Printf("Tunnel Info:\nTunnelHost: %s\nDestinationHost: %s\nLocalPort: %d\n", jumpHost, destHost, port)
-//		return port, tunnel.Start()
-//	}
 func (c *cfg) startSSHTunnel(selectedItem Item) (int, error) {
 	tunnIP := c.connections.TunnelHosts[selectedItem.tunnelHost].IP
 	jumpHost := fmt.Sprintf("%s@%s:22", selectedItem.user, tunnIP)

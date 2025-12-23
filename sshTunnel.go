@@ -142,15 +142,15 @@ func NewSSHTunnel(tunnel string, password string, destination string) *SSHTunnel
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // modern replacement
 			Timeout:         10 * time.Second,
-			HostKeyAlgorithms: []string{
-				ssh.KeyAlgoED25519,
-				ssh.KeyAlgoECDSA256,
-				ssh.KeyAlgoECDSA384,
-				ssh.KeyAlgoECDSA521,
-				ssh.KeyAlgoRSASHA256,
-				ssh.KeyAlgoRSASHA512,
-				ssh.KeyAlgoRSA,
-			},
+			// HostKeyAlgorithms: []string{
+			// 	ssh.KeyAlgoED25519,
+			// 	ssh.KeyAlgoECDSA256,
+			// 	ssh.KeyAlgoECDSA384,
+			// 	ssh.KeyAlgoECDSA521,
+			// 	ssh.KeyAlgoRSASHA256,
+			// 	ssh.KeyAlgoRSASHA512,
+			// 	ssh.KeyAlgoRSA,
+			// },
 		},
 	}
 }
