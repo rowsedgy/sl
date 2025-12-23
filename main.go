@@ -165,21 +165,42 @@ func main() {
 		globalCFG.handleArgs(args)
 	}
 
-	p := tea.NewProgram(
-		globalCFG.initialModel(),
-		tea.WithAltScreen(),
-	)
+	for {
+		mod, err := runBubbleTea(&globalCFG)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	m, err := p.Run()
-	if err != nil {
-		fmt.Println("Error starting program:", err)
-		os.Exit(1)
-	}
+		if err := globalCFG.handleSSHSession(mod); err != nil {
+			log.Println(err)
+		}
 
-	err = globalCFG.handleSSHSession(m)
-	if err != nil {
-		log.Fatal(err)
+		m := mod.(model)
+		if !m.startSSH {
+			break
+		}
 	}
+	// p := tea.NewProgram(
+	// 	globalCFG.initialModel(),
+	// 	tea.WithAltScreen(),
+	// )
+	//
+	// m, err := p.Run()
+	// if err != nil {
+	// 	fmt.Println("Error starting program:", err)
+	// 	os.Exit(1)
+	// }
+	//
+	// err = globalCFG.handleSSHSession(m)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+}
+
+func runBubbleTea(cfg *cfg) (tea.Model, error) {
+	p := tea.NewProgram(cfg.initialModel(), tea.WithAltScreen())
+
+	return p.Run()
 }
 
 func checkConfigFile(file string) (string, error) {

@@ -15,17 +15,51 @@ type tunnelResult struct {
 	err  error
 }
 
-func (c *cfg) spawnSSHSession(selectedItem Item) error {
-	var cmd *exec.Cmd
+func (c *cfg) getTmuxInfo(selectedItem Item, port string) (string, string) {
+	session := fmt.Sprintf("ssh-%s", selectedItem.name)
+	command := ""
 
 	if selectedItem.pubauth {
-		cmd = exec.Command("ssh", "-i", selectedItem.key, "-o", "StrictHostKeyChecking=no", selectedItem.user+"@"+selectedItem.ip)
+		command = fmt.Sprintf("ssh -i %s -o StrictHostKeyChecking=no %s@%s; tmux switch-client -l", selectedItem.key, selectedItem.user, selectedItem.ip)
+	}
+	if selectedItem.tunnel {
+		command = fmt.Sprintf("sshpass -p %s ssh -p %s %s@127.0.0.1 -o HostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no; tmux switch-client -l", selectedItem.password, port, selectedItem.user)
+	} else {
+		command = fmt.Sprintf("sshpass -p %s ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password %s@%s; tmux switch-client -l", selectedItem.password, selectedItem.user, selectedItem.ip)
+	}
+
+	return session, command
+}
+
+func (c *cfg) spawnTmuxSession(name, command string) {
+	exec.Command("tmux", "new-session", "-d", "-s", name).Run()
+
+	if os.Getenv("TMUX") != "" {
+		c.runTmuxCommand("tmux", "switch-client", "-t", name)
+	} else {
+		c.runTmuxCommand("tmux", "attach-session", "-t", name)
+	}
+
+	exec.Command("tmux", "send-keys", "-t", name, command, "C-m").Run()
+}
+
+func (c *cfg) runTmuxCommand(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
+}
+
+func (c *cfg) spawnSSHSession(selectedItem Item) error {
+	name, command := c.getTmuxInfo(selectedItem, "")
+	if selectedItem.pubauth {
+		c.spawnTmuxSession(name, command)
 	}
 	if selectedItem.tunnel {
 		resultCh := make(chan tunnelResult)
 
 		go func() {
-
 			port, err := c.startSSHTunnel(selectedItem)
 			resultCh <- tunnelResult{port: port, err: err}
 		}()
@@ -34,20 +68,13 @@ func (c *cfg) spawnSSHSession(selectedItem Item) error {
 		if result.err != nil {
 			return result.err
 		}
-
-		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-p", fmt.Sprintf("%d", result.port), fmt.Sprintf("%s@127.0.0.1", selectedItem.user), "-o", "HostKeyAlgorithms=+ssh-rsa", "-o", "StrictHostKeyChecking=no")
+		name, command = c.getTmuxInfo(selectedItem, fmt.Sprintf("%d", result.port))
+		c.spawnTmuxSession(name, command)
 
 	} else {
-		cmd = exec.Command("sshpass", "-p", selectedItem.password, "ssh", "-o", "StrictHostKeyChecking=no", "-o", "PreferredAuthentications=password", selectedItem.user+"@"+selectedItem.ip)
+		c.spawnTmuxSession(name, command)
 	}
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -60,7 +87,7 @@ func (c *cfg) startSSHTunnel(selectedItem Item) (int, error) {
 
 	endpointAddr := "127.0.0.1"
 	tunnel.Local = NewEndpoint(endpointAddr)
-	tunnel.Log = log.Default()
+	// tunnel.Log = log.Default()
 
 	// start the blocking tunnel in the background
 	go func() {

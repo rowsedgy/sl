@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -113,37 +112,6 @@ func PrivateKeyFile(path string) (ssh.AuthMethod, error) {
 	}
 
 	return ssh.PublicKeys(key), nil
-}
-
-func NewLegacySSHTunnel(tunnel string, password string, destination string) *SSHTunnel {
-	local := NewEndpoint("localhost:0")
-	server := NewEndpoint(tunnel)
-
-	if server.Port == 0 {
-		server.Port = 22
-	}
-
-	return &SSHTunnel{
-		Local:  local,
-		Server: server,
-		Remote: NewEndpoint(destination),
-		Config: &ssh.ClientConfig{
-			User: server.User,
-			Auth: []ssh.AuthMethod{
-				ssh.KeyboardInteractive(
-					func(user, instruction string, questions []string, echos []bool) ([]string, error) {
-						answers := make([]string, len(questions))
-						for i := range answers {
-							answers[i] = password
-						}
-						return answers, nil
-					},
-				),
-			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-			Timeout:         10 * time.Second,
-		},
-	}
 }
 
 func NewSSHTunnel(tunnel string, legacy bool, password, destination string) *SSHTunnel {
