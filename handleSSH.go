@@ -80,7 +80,7 @@ func (c *cfg) startSSHTunnel(selectedItem Item) (int, error) {
 
 	tunnel := NewSSHTunnel(jumpHost, selectedItem.password, destHost)
 
-	endpointAddr := fmt.Sprintf("127.0.0.1")
+	endpointAddr := "127.0.0.1"
 	tunnel.Local = NewEndpoint(endpointAddr)
 	tunnel.Log = log.Default()
 

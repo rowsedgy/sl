@@ -124,6 +124,8 @@ func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, 
 	newEntry.Password = password
 	newEntry.Pubauth = pubauth
 	newEntry.Key = key
+	newEntry.TunnelHost = tunnelhost
+	newEntry.Tunnel = tunnel
 
 	// connections = append(connections, newEntry)
 	conns.Hosts[name] = newEntry
@@ -148,6 +150,7 @@ func (c *cfg) addTunnel(name, user, password, ip string) error {
 
 	newTunnelEntry := TunnelHost{}
 	newTunnelEntry.IP = ip
+	newTunnelEntry.User = user
 	newTunnelEntry.Password = password
 	c.connections.TunnelHosts[name] = newTunnelEntry
 
