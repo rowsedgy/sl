@@ -101,7 +101,7 @@ Campos disponibles (cualquier campo no definido recibira el valor por defecto **
 - key
 - tunnel
 - tunnelhost
-- legcy
+- legacy
 
 ```
 sl add --name=<nombre> --ip=<ip> --webip=<webip> --user=<usuario> --password=<contraseña> --pubauth=<true/false> --key=<ruta clave> --tunnel<true/false> --tunnelhost=<nombre tunel> --legacy=<true/false>
