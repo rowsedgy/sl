@@ -8,150 +8,83 @@ import (
 )
 
 func (c *cfg) handleArgs(args []string) {
-	if len(args) < 2 {
-		if args[0] == "ls" {
-			err := c.listEntries()
-			if err != nil {
-				fmt.Println("ERROR -", err)
-			}
-			os.Exit(0)
-		}
-		if args[0] == "lstun" {
-			err := c.listTunnels()
-			if err != nil {
-				fmt.Println("ERROR -", err)
-			}
-			os.Exit(0)
-		}
-	}
-	// if args[0] == "ls" && len(args) < 2 {
-	// 	err := c.listEntries()
-	// 	if err != nil {
-	// 		fmt.Println("ERROR -", err)
-	// 	}
-	// 	os.Exit(0)
-	// }
-	// if args[0] == "--help" || len(args) < 2 {
-	// 	c.printHelp()
-	// }
-
-	addHostCmd := flag.NewFlagSet("add", flag.ExitOnError)
-	addName := addHostCmd.String("name", "None", "HostName to add")
-	addIP := addHostCmd.String("ip", "None", "Host SSH IP")
-	addWebIP := addHostCmd.String("webip", "None", "Web Interface IP")
-	addUser := addHostCmd.String("user", "None", "SSH User")
-	addPassword := addHostCmd.String("password", "None", "SSH Password")
-	addPubauth := addHostCmd.Bool("pubauth", false, "PubKey authentication")
-	addPubKey := addHostCmd.String("key", "None", "Key file path")
-	addTunnel := addHostCmd.Bool("tunnel", false, "Connect through tunnel")
-	addTunnelHost := addHostCmd.String("tunnelhost", "None", "Tunnel Host")
-
-	addTunnelCmd := flag.NewFlagSet("addtun", flag.ExitOnError)
-	addTunnelName := addTunnelCmd.String("name", "None", "Tunnel hostname to add")
-	addTunnelIP := addTunnelCmd.String("ip", "None", "Tunnel host IP")
-	addTunnelUser := addTunnelCmd.String("user", "None", "Tunnel ssh user")
-	addTunnelPassword := addTunnelCmd.String("password", "None", "Tunnel ssh password")
-
-	removeHostCmd := flag.NewFlagSet("remove", flag.ExitOnError)
-	removeName := removeHostCmd.String("name", "Nil", "HostName to remove")
-
-	removeTunnelCmd := flag.NewFlagSet("removetun", flag.ExitOnError)
-	removeTunnelName := removeTunnelCmd.String("name", "Nil", "Tunnel Hostname to remove")
-
-	switch args[0] {
-	case "add":
-		addHostCmd.Parse(args[1:])
-		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword, *addPubKey, *addTunnelHost, *addPubauth, *addTunnel)
+	if args[0] == "ls" && len(args) < 2 {
+		err := c.listEntries()
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
-	case "addtun":
-		addTunnelCmd.Parse(args[1:])
-		err := c.addTunnel(*addTunnelName, *addTunnelUser, *addTunnelPassword, *addTunnelIP)
+	}
+	if args[0] == "--help" || len(args) < 2 {
+		c.printHelp()
+	}
+
+	addCmd := flag.NewFlagSet("add", flag.ExitOnError)
+	addName := addCmd.String("name", "None", "HostName to add")
+	addIP := addCmd.String("ip", "None", "Host SSH IP")
+	addWebIP := addCmd.String("webip", "None", "Web Interface IP")
+	addUser := addCmd.String("user", "None", "SSH User")
+	addPassword := addCmd.String("password", "None", "SSH Password")
+	addPubauth := addCmd.Bool("pubauth", false, "PubKey authentication")
+	addPubKey := addCmd.String("key", "None", "Key file path")
+
+	removeCmd := flag.NewFlagSet("remove", flag.ExitOnError)
+	removeName := removeCmd.String("name", "Nil", "HostName to remove")
+
+	switch args[0] {
+	case "add":
+		addCmd.Parse(args[1:])
+		err := c.addEntry(*addName, *addIP, *addWebIP, *addUser, *addPassword, *addPubKey, *addPubauth)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
+		os.Exit(0)
 	case "remove":
-		removeHostCmd.Parse(args[1:])
+		removeCmd.Parse(args[1:])
 		err := c.removeEntry(*removeName)
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
 		os.Exit(0)
-	case "removetun":
-		removeTunnelCmd.Parse(args[1:])
-		err := c.removeTunnel(*removeTunnelName)
-		if err != nil {
-			fmt.Println("ERROR -", err)
-		}
 	default:
 		c.printHelp()
 	}
 }
 
-func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, pubauth, tunnel bool) error {
+func (c *cfg) addEntry(name, ip, webip, user, password, key string, pubauth bool) error {
 	bytes, err := os.ReadFile(c.filepath)
 	if err != nil {
 		return err
 	}
 
-	var conns connections
+	var connections []connection
 
 	if len(bytes) > 3 {
-		err = json.Unmarshal(bytes, &conns)
+		err = json.Unmarshal(bytes, &connections)
 		if err != nil {
 			return fmt.Errorf("Error unmarshaling json in addentry: %v", err)
 		}
+
+		// check duplicates
+		for _, c := range connections {
+			if c.Name == name {
+				return fmt.Errorf("Entry %s already exists", name)
+			}
+		}
 	}
 
-	// check duplicates
-	if _, ok := conns.Hosts[name]; ok {
-		return fmt.Errorf("Entry %s already exists", name)
-	}
-	// for _, c := range connections {
-	// 	if c.Name == name {
-	// 		return fmt.Errorf("Entry %s already exists", name)
-	// 	}
-	// }
-	// }
+	var newEntry connection
+	newEntry.Name = name
+	newEntry.Data.IP = ip
+	newEntry.Data.WebIP = webip
+	newEntry.Data.User = user
+	newEntry.Data.Password = password
+	newEntry.Data.Pubauth = pubauth
+	newEntry.Data.Key = key
 
-	// var newEntry Host
-	newEntry := Host{}
-	newEntry.IP = ip
-	newEntry.WebIP = webip
-	newEntry.User = user
-	newEntry.Password = password
-	newEntry.Pubauth = pubauth
-	newEntry.Key = key
+	connections = append(connections, newEntry)
 
-	// connections = append(connections, newEntry)
-	conns.Hosts[name] = newEntry
-
-	updatedBytes, err := json.MarshalIndent(conns, "", "\t")
-	if err != nil {
-		return fmt.Errorf("Error marshaling new json: %v", err)
-	}
-
-	err = os.WriteFile(c.filepath, updatedBytes, 0o644)
-	if err != nil {
-		return fmt.Errorf("Error writing to file: %v", err)
-	}
-
-	return nil
-}
-
-func (c *cfg) addTunnel(name, user, password, ip string) error {
-	if _, ok := c.connections.TunnelHosts[name]; ok {
-		return fmt.Errorf("Tunnel entry %s already exists", name)
-	}
-
-	newTunnelEntry := TunnelHost{}
-	newTunnelEntry.IP = ip
-	newTunnelEntry.Password = password
-	c.connections.TunnelHosts[name] = newTunnelEntry
-
-	updatedBytes, err := json.MarshalIndent(c.connections, "", "\t")
+	updatedBytes, err := json.MarshalIndent(connections, "", "\t")
 	if err != nil {
 		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
@@ -170,46 +103,30 @@ func (c *cfg) removeEntry(name string) error {
 		return fmt.Errorf("Error opening file: %v", err)
 	}
 
-	var conns connections
+	var connections []connection
 
-	err = json.Unmarshal(bytes, &conns)
+	err = json.Unmarshal(bytes, &connections)
 	if err != nil {
 		return fmt.Errorf("Error unmarshaling json: %v", err)
 	}
 
-	if _, ok := conns.Hosts[name]; ok {
-		delete(conns.Hosts, name)
-		updatedBytes, err := json.MarshalIndent(conns, "", "\t")
-		if err != nil {
-			return fmt.Errorf("Error marshaling new json: %v", err)
+	for i, c := range connections {
+		if c.Name == name {
+			connections = append(connections[:i], connections[i+1:]...)
 		}
-
-		err = os.WriteFile(c.filepath, updatedBytes, 0o644)
-		if err != nil {
-			return fmt.Errorf("Error writing to file: %v", err)
-		}
-
-		return nil
 	}
-	return fmt.Errorf("Entry %s not found", name)
-}
 
-func (c *cfg) removeTunnel(name string) error {
-	if _, ok := c.connections.TunnelHosts[name]; ok {
-		delete(c.connections.TunnelHosts, name)
-		updatedBytes, err := json.MarshalIndent(c.connections, "", "\t")
-		if err != nil {
-			return fmt.Errorf("Error marshaling new json: %v", err)
-		}
-
-		err = os.WriteFile(c.filepath, updatedBytes, 0o644)
-		if err != nil {
-			return fmt.Errorf("Error writing to file: %v", err)
-		}
-
-		return nil
+	updatedBytes, err := json.MarshalIndent(connections, "", "\t")
+	if err != nil {
+		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
-	return fmt.Errorf("Tunnel %s not found", name)
+
+	err = os.WriteFile(c.filepath, updatedBytes, 0o644)
+	if err != nil {
+		return fmt.Errorf("Error writing to file: %v", err)
+	}
+
+	return nil
 }
 
 func (c *cfg) listEntries() error {
@@ -218,48 +135,21 @@ func (c *cfg) listEntries() error {
 		return fmt.Errorf("Error opening file: %v", err)
 	}
 
-	var conns connections
+	var connections []connection
 
 	if len(bytes) < 3 {
 		return fmt.Errorf("No entries in %s", c.filepath)
 	}
 
-	err = json.Unmarshal(bytes, &conns)
+	err = json.Unmarshal(bytes, &connections)
 	if err != nil {
 		return fmt.Errorf("Error unmarshaling json: %v", err)
 	}
 
-	// fmt.Println(c.connections.Hosts)
-	for name, data := range conns.Hosts {
-		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n - Tunnel: %v\n - TunnelHost: %s\n", name, data.IP, data.WebIP, data.Pubauth, data.Key, data.Tunnel, data.TunnelHost)
-	}
-	// for _, c := range connections {
-	// 	fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n", c.Name, c.Data.IP, c.Data.WebIP, c.Data.Pubauth, c.Data.Key)
-	// }
-
-	return nil
-}
-
-func (c *cfg) listTunnels() error {
-	bytes, err := os.ReadFile(c.filepath)
-	if err != nil {
-		return fmt.Errorf("Error opening file: %v", err)
+	for _, c := range connections {
+		fmt.Printf("* Name: %s\n - IP: %s\n - WebIp: %s\n - PubKey: %v\n - KeyPath: %s\n", c.Name, c.Data.IP, c.Data.WebIP, c.Data.Pubauth, c.Data.Key)
 	}
 
-	var conns connections
-
-	if len(bytes) < 3 {
-		return fmt.Errorf("No entries in %s", c.filepath)
-	}
-
-	err = json.Unmarshal(bytes, &conns)
-	if err != nil {
-		return fmt.Errorf("Error unmarshaling json: %v", err)
-	}
-
-	for name, data := range conns.TunnelHosts {
-		fmt.Printf("* Name: %s\n - IP: %s\n", name, data.IP)
-	}
 	return nil
 }
 
