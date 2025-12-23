@@ -28,22 +28,30 @@ Este fichero se puede generar a mano previamente o se generara solo al añadir a
 **\*\*** **IMPORTANTE**  **\*\***  
 **TODA LA INFORMACION AÑADIDA AL FICHERO SL-CONNECTIONS ESTA GUARDADA EN TEXTO PLANO. ESTO INCLUYE CONTRASEÑAS**
 
-El formato del archivo de conexiones es el siguiente (es una lista de objetos json):
+El formato del archivo de conexiones es el siguiente:
 
 ```json
-[
-	{
-		"name": "Nombre de Host",
-		"data": {
+{
+	"tunnelhosts": {
+		"nombre-tunel-11": {
+			"user": "Usuario SSH Tunel",
+			"password": "Contraseña SSH Tunel",
+			"ip": "IP tunel"
+		}
+	},
+	"hosts": {
+		"nombre-host-1": {
 			"user": "Usuario SSH",
 			"password": "Contraseña SSH",
 			"pubauth": <true/false>,  // Define si host usa autenticacion por clave publica.
 			"key": "Ruta de fichero clave publica",
 			"ip": "IP de conexion por SSH",
-			"webip": "URL de endpoint web" //  ej: "http://1.2.3.4/web"
+			"webip": "URL de endpoint web", //  ej: "http://1.2.3.4/web"
+			"tunnel": <true/false>, // Define si el host necesita conectividad por tunel
+			"tunnelhost": "Nombre del tunel usado para conexion" // El nombre debe coincidir con el de la entrada de tunnelhosts
 		}
 	}
-]
+}
 ```
 ### Modo interactivo
 
@@ -74,6 +82,12 @@ sl help
 ```
 sl ls
 ```
+
+#### Listar todos los tuneles del fichero de conexiones.
+```
+sl lstun
+```
+
 #### Añadir entrada
 Campos disponibles (cualquier campo no definido recibira el valor por defecto **None**)
 - name 
@@ -84,16 +98,36 @@ Campos disponibles (cualquier campo no definido recibira el valor por defecto **
 - password
 - pubauth
 - key
+- tunnel
+- tunnelhost
 
 ```
-sl add --name=<nombre> --ip=<ip> --webip=<webip> --user=<usuario> --password=<contraseña> --pubauth=<true/false> --key=<ruta clave>
+sl add --name=<nombre> --ip=<ip> --webip=<webip> --user=<usuario> --password=<contraseña> --pubauth=<true/false> --key=<ruta clave> --tunnel<true/false> --tunnelhost=<nombre tunel>
 ```
+
+#### Añadir tunel
+Campos disponibles (cualquier campo no definido recibira el valor por defecto **None**)
+- name
+- ip
+- user
+- password
+
+```
+sl addtun --name=<nombre> --ip=<ip> --user=<usuario> --password=<contraseña>
+```
+
 
 #### Borrar entrada
 Las entradas se borran usando el campo **name**
 
 ```
 sl remove --name=<nombre>
+```
+
+#### Borrar tunel
+Los tuneles se borran usando el campo **name**
+```
+sl removetun --name=<nombre>
 ```
 
 #### Editar entrada

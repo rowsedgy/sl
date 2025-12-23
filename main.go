@@ -12,13 +12,15 @@ import (
 )
 
 type Item struct {
-	name     string
-	ip       string
-	webip    string
-	pubauth  bool
-	user     string
-	password string
-	key      string
+	name       string
+	ip         string
+	webip      string
+	pubauth    bool
+	user       string
+	password   string
+	key        string
+	tunnel     bool
+	tunnelHost string
 }
 
 type listKeyMap struct {
@@ -55,7 +57,8 @@ type model struct {
 const fileName = "sl-connections.json"
 
 type cfg struct {
-	filepath string
+	filepath    string
+	connections connections
 }
 
 func (c *cfg) initialModel() model {
@@ -129,13 +132,15 @@ func (m model) View() string {
 			Padding(1, 2).
 			Margin(1, 2).
 			Width(50).
-			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\nPubKey: %s\nKeyPath: %s\n\nPress \"i\" to go back to list.",
+			Render(fmt.Sprintf("Name: %s\nIP: %s\nUser: %s\nWeb IP: %s\nPubKey: %s\nKeyPath: %s\nTunnel: %s\nTunnelHost: %s\nPress \"i\" to go back to list.",
 				selected.name,
 				selected.ip,
 				selected.user,
 				selected.webip,
 				fmt.Sprintf("%v", selected.pubauth),
 				selected.key,
+				fmt.Sprintf("%v", selected.tunnel),
+				selected.tunnelHost,
 			))
 		return box
 	}
@@ -144,6 +149,8 @@ func (m model) View() string {
 }
 
 func main() {
+	// _, _ = genList()
+	// os.Exit(0)
 	fullFilePath, err := checkConfigFile(fileName)
 	if err != nil {
 		fmt.Println("ERROR -", err)
@@ -169,7 +176,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = handleSSHSession(m)
+	err = globalCFG.handleSSHSession(m)
 	if err != nil {
 		log.Fatal(err)
 	}
