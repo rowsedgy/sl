@@ -196,9 +196,21 @@ func (c *cfg) removeEntry(name string) error {
 }
 
 func (c *cfg) removeTunnel(name string) error {
-	if _, ok := c.connections.TunnelHosts[name]; ok {
-		delete(c.connections.TunnelHosts, name)
-		updatedBytes, err := json.MarshalIndent(c.connections, "", "\t")
+	bytes, err := os.ReadFile(c.filepath)
+	if err != nil {
+		return fmt.Errorf("Error opening file: %v", err)
+	}
+
+	var conns connections
+
+	err = json.Unmarshal(bytes, &conns)
+	if err != nil {
+		return fmt.Errorf("Error unmarshaling json: %v", err)
+	}
+
+	if _, ok := conns.TunnelHosts[name]; ok {
+		delete(conns.TunnelHosts, name)
+		updatedBytes, err := json.MarshalIndent(conns, "", "\t")
 		if err != nil {
 			return fmt.Errorf("Error marshaling new json: %v", err)
 		}
