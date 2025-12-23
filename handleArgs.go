@@ -62,6 +62,7 @@ func (c *cfg) handleArgs(args []string) {
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
+		os.Exit(0)
 	case "remove":
 		removeHostCmd.Parse(args[1:])
 		err := c.removeEntry(*removeName)
@@ -75,6 +76,7 @@ func (c *cfg) handleArgs(args []string) {
 		if err != nil {
 			fmt.Println("ERROR -", err)
 		}
+		os.Exit(0)
 	default:
 		c.printHelp()
 	}
