@@ -24,16 +24,6 @@ func (c *cfg) handleArgs(args []string) {
 			os.Exit(0)
 		}
 	}
-	// if args[0] == "ls" && len(args) < 2 {
-	// 	err := c.listEntries()
-	// 	if err != nil {
-	// 		fmt.Println("ERROR -", err)
-	// 	}
-	// 	os.Exit(0)
-	// }
-	// if args[0] == "--help" || len(args) < 2 {
-	// 	c.printHelp()
-	// }
 
 	addHostCmd := flag.NewFlagSet("add", flag.ExitOnError)
 	addName := addHostCmd.String("name", "None", "HostName to add")
@@ -109,14 +99,7 @@ func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, 
 	if _, ok := conns.Hosts[name]; ok {
 		return fmt.Errorf("Entry %s already exists", name)
 	}
-	// for _, c := range connections {
-	// 	if c.Name == name {
-	// 		return fmt.Errorf("Entry %s already exists", name)
-	// 	}
-	// }
-	// }
 
-	// var newEntry Host
 	newEntry := Host{}
 	newEntry.IP = ip
 	newEntry.WebIP = webip
@@ -127,7 +110,6 @@ func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, 
 	newEntry.TunnelHost = tunnelhost
 	newEntry.Tunnel = tunnel
 
-	// connections = append(connections, newEntry)
 	conns.Hosts[name] = newEntry
 
 	updatedBytes, err := json.MarshalIndent(conns, "", "\t")
@@ -144,7 +126,21 @@ func (c *cfg) addEntry(name, ip, webip, user, password, key, tunnelhost string, 
 }
 
 func (c *cfg) addTunnel(name, user, password, ip string) error {
-	if _, ok := c.connections.TunnelHosts[name]; ok {
+	bytes, err := os.ReadFile(c.filepath)
+	if err != nil {
+		return err
+	}
+
+	var conns connections
+
+	if len(bytes) > 3 {
+		err = json.Unmarshal(bytes, &conns)
+		if err != nil {
+			return fmt.Errorf("Error unmarshaling json in addentry: %v", err)
+		}
+	}
+
+	if _, ok := conns.TunnelHosts[name]; ok {
 		return fmt.Errorf("Tunnel entry %s already exists", name)
 	}
 
@@ -152,9 +148,9 @@ func (c *cfg) addTunnel(name, user, password, ip string) error {
 	newTunnelEntry.IP = ip
 	newTunnelEntry.User = user
 	newTunnelEntry.Password = password
-	c.connections.TunnelHosts[name] = newTunnelEntry
+	conns.TunnelHosts[name] = newTunnelEntry
 
-	updatedBytes, err := json.MarshalIndent(c.connections, "", "\t")
+	updatedBytes, err := json.MarshalIndent(conns, "", "\t")
 	if err != nil {
 		return fmt.Errorf("Error marshaling new json: %v", err)
 	}
