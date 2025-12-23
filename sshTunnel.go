@@ -13,11 +13,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// const (
-// 	minPort = 40000
-// 	maxPort = 45000
-// )
-
 type Endpoint struct {
 	Host string
 	Port int
@@ -148,41 +143,14 @@ func NewSSHTunnel(tunnel string, password string, destination string) *SSHTunnel
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // modern replacement
 			Timeout:         10 * time.Second,
 			HostKeyAlgorithms: []string{
+				ssh.KeyAlgoED25519,
+				ssh.KeyAlgoECDSA256,
+				ssh.KeyAlgoECDSA384,
+				ssh.KeyAlgoECDSA521,
+				ssh.KeyAlgoRSASHA256,
+				ssh.KeyAlgoRSASHA512,
 				ssh.KeyAlgoRSA,
 			},
 		},
 	}
 }
-
-// func getFreePort() (string, error) {
-// 	out, err := exec.Command("sh", "-c", `ss -tupln4 | awk '{split($5,a,":"); print a[2]}'`).Output()
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-//
-// 	usedPorts := make([]int, len(lines))
-//
-// 	for i, port := range lines {
-// 		portInt, _ := strconv.Atoi(port)
-// 		usedPorts[i] = portInt
-// 	}
-//
-// 	var randPort int
-//
-// 	for {
-// 		randNum := pickRandomPort()
-// 		if slices.Contains(usedPorts, randNum) {
-// 			continue
-// 		}
-// 		randPort = randNum
-// 		break
-// 	}
-// 	portReturn := strconv.Itoa(randPort)
-// 	return portReturn, nil
-// }
-//
-// // func pickRandomPort() int {
-// 	// return rand.IntN(maxPort-minPort) + 40000
-// // }
